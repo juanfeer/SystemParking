@@ -8,15 +8,21 @@ public class Parqueadero {
     private List<Vehiculo> vehiculosEstacionados = new ArrayList<>();
     private List<Vehiculo> vehiculosTieneMensualidad = new ArrayList<>();
 
-    public boolean registrarIngresoVehiculo(String placa, String tipo, boolean conMensualidad) {
+    public boolean ingresoVehiculo(String placa, String tipo, boolean conMensualidad) {
         if (conMensualidad) {
-            return registrarVehiculoTieneMensualidad(placa, tipo);
-        } else {
-            return registrarVehiculoNormal(placa, tipo);
+            if(vehiculoTieneMensualidad(placa)) {
+            	System.out.println("Este vehículo ya tiene una mensualidad.");
+            	return true;
+            }else{
+            	System.out.println("Este vehículo no tiene una mensualidad.");
+            	return false;
+            }
         }
+        else {
+            return registrarVehiculo(placa, tipo);
+       } 
     }
-
-    private boolean registrarVehiculoNormal(String placa, String tipo) {
+    private boolean registrarVehiculo(String placa, String tipo) {
         if (tipo.equalsIgnoreCase("carro") && espaciosDisponiblesAutos() > 0) {
             vehiculosEstacionados.add(new Vehiculo(placa, tipo, LocalDateTime.now(), false));
             return true;
@@ -28,8 +34,11 @@ public class Parqueadero {
     }
 
     private boolean registrarVehiculoTieneMensualidad(String placa, String tipo) {
-        if (vehiculoTieneMensualidad(placa)) {
-            vehiculosTieneMensualidad.add(new Vehiculo(placa, tipo, LocalDateTime.now(), true));
+    	if (tipo.equalsIgnoreCase("carro") && espaciosDisponiblesAutos() > 0) {
+            vehiculosTieneMensualidad.add(new Vehiculo(placa, tipo, LocalDateTime.now(), false));
+            return true;
+        } else if (tipo.equalsIgnoreCase("moto") && espaciosDisponiblesMotos() > 0) {
+            vehiculosTieneMensualidad.add(new Vehiculo(placa, tipo, LocalDateTime.now(), false));
             return true;
         }
         return false;
@@ -78,13 +87,15 @@ public class Parqueadero {
     }
 
     public int espaciosDisponiblesAutos() {
-        long autosEstacionados = vehiculosEstacionados.stream().filter(v -> "carro".equalsIgnoreCase(v.getTipo())).count();
-        return capacidadAutos - (int) autosEstacionados;
+        long carrosEstacionados = vehiculosEstacionados.stream().filter(v -> "carro".equalsIgnoreCase(v.getTipo())).count();
+        long carrosMensualidad = vehiculosTieneMensualidad.stream().filter(v -> "carro".equalsIgnoreCase(v.getTipo())).count();
+        return capacidadAutos - (int) (carrosEstacionados + carrosMensualidad);
     }
 
     public int espaciosDisponiblesMotos() {
         long motosEstacionados = vehiculosEstacionados.stream().filter(v -> "moto".equalsIgnoreCase(v.getTipo())).count();
-        return capacidadMotos - (int) motosEstacionados;
+        long motosMensualidad = vehiculosTieneMensualidad.stream().filter(v -> "moto".equalsIgnoreCase(v.getTipo())).count();
+        return capacidadMotos - (int) (motosEstacionados + motosMensualidad);
     }
 
     public double calcularTotalIngreso() {
